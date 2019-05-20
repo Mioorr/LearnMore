@@ -25,18 +25,68 @@ canvas 可以设置替换内容。不支持 canvas 标签的浏览器将会忽�
 
 `</canvas>`结束标签不能省略，否则文档的其余部分会被认为是替代内容，不会显示出来。
 
-## 1.2 渲染上下文
+### 1.2 渲染上下文
 
 canvas 元素创造一个固定大小的画布，公开一个或多个**渲染上下文**，它可以用来绘制和处理要展示的内容。
 
 canvas 开始是空白的。首先脚本要找到渲染上下文，然后在这上面绘制。
 
-canvas 元素有一个`getContex()`方法，用来获取上下文和它的绘画功能。方法只有一个参数：上下文格式。
+canvas 元素有一个`getContext()`方法，用来获取上下文和它的绘画功能。方法只有一个参数：上下文格式。
+
+通过测试`getContext()`方法是否存在，可以检查浏览器对 canvas 的支持性。
 
 ```javascript
 var canvas = document.getElementById('tutorial');
-var ctx = canvas.getContext('2d');
+if (canvas.getContext) {
+  var ctx = canvas.getContext('2d');
+  // ...
+} else {
+  // ...
+}
 ```
+
+## 2. 绘制形状
+
+### 2.1 画布栅格
+
+canvas 元素默认被网格覆盖，通常来说，网格中的一个单元相当于 Canvas 中的 1px。
+
+
+
+![canvas栅格](./img/canvas栅格.png)
+
+
+
+
+
+
+
+
+
+```html
+<html>
+<head>
+	<script type="application/javascript">
+    function draw() {
+      var canvas = document.getElementById("canvas");
+      if (canvas.getContext) {
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgb(200,0,0)";
+        ctx.fillRect (10, 10, 55, 50);
+        ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
+        ctx.fillRect (30, 30, 55, 50);
+      }
+    }
+  </script>
+</head>
+<body onload="draw();">
+<!-- 在页面加载完执行draw() -->
+  <canvas id="canvas" width="150" height="150"></canvas>
+</body>
+</html>
+```
+
+
 
 
 
