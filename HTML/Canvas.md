@@ -79,9 +79,60 @@ Canvas 提供了 3 种方法绘制矩形：
 要用到的函数：
 
 - `beginPath()`：新建一条路径，生成之后，图形绘制命令被指向到路径上生成路径。
-- `closePath()`：闭合路径后图形绘制命令又重新指向到上下文中。
+- `closePath()`：闭合路径后图形绘制命令又重新指向到上下文中。这个方法通过绘制一条从当前点到开始点的直线来闭合图形，如果图形已经是闭合的，即当前点为开始点，该函数什么也不做。
 - `stroke()`：通过线条绘制图形轮廓。
 - `fill()`：通过填充路径的内容区域生成实心的图形。
+
+本质上，路径由很多子路径构成，这些子路径都是在一个列表中，所有子路径（线、弧形等）构成图形。每次这个方法调用后，列表清空重置，就可以重新绘制新的图形。
+
+> <font color=blue>Note：</font>
+>
+> 当前路径为空，即调用`beginPath()`后，或 canvas 刚建时，第一条路径构造命令通常被视为是`moveTo()`。因此，一般要在设置路径之后专门指定起始位置。
+>
+> 当调用`fill()`函数时，所有没有闭合的形状都会自动闭合，所以不需要调用`closePath()`函数；但调用`stroke()`时不会自动闭合。
+
+**移动笔触**
+
+`moveTo(x, y)`：将笔触移动到指定的坐标上。
+
+**线**
+
+`lineTo(x, y)`：绘制一条从当前位置到指定坐标的直线。
+
+**圆弧**
+
+`arc(x, y, radius, startAngle, endAngle,anticlockwise)`：画一个以`(x, y)`为圆心，以`radius`为半径的圆弧，从`startAngle`开始到`endAngle`结束，按`anticlockwise`给定的方向（默认为顺时针）生成，它为`true`时是逆时针方向，否则为顺时针方向。
+
+`arcTo(x1, y1, x2, y2, radius)`（不太可靠）：根据给定的控制点和半径画一段圆弧，再以直线连接两个控制点。
+
+
+
+
+
+```javascript
+function draw() {
+  var canvas = document.getElementById('canvas');
+  if (canvas.getContext) {
+    var ctx = canvas.getContext('2d');
+    // 1.创建起始点
+    ctx.beginPath();
+    ctx.moveTo(100, 100); // 移动笔触设置起点
+    // 2.用画图路径命令画出路径
+    ctx.lineTo(150, 100);
+    ctx.lineTo(100, 150);
+    // 3.把路径封闭; 4.通过填充来渲染图形
+    ctx.fill();    
+  }
+}
+```
+
+上面代码绘制结果：
+
+![绘制三角形](./img/绘制三角形.png)
+
+
+
+
 
 
 
