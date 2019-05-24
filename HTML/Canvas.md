@@ -45,6 +45,8 @@ if (canvas.getContext) {
 }
 ```
 
+---
+
 ## 2.绘制形状
 
 ### 2.1 画布栅格
@@ -193,14 +195,9 @@ function draw() {
    ctx.stroke();
   }
 }
-```
-
-![用二次赛贝尔曲线绘制对话气泡](./img/canvas/二次贝赛尔曲线.png)
-
-```javascript
 // 用多个三次贝塞尔曲线绘制❤
 function draw() {
-	var canvas = document.getElementById('canvas');
+  var canvas = document.getElementById('canvas');
   if (canvas.getContext){
     var ctx = canvas.getContext('2d');
     ctx.beginPath();
@@ -216,7 +213,7 @@ function draw() {
 }
 ```
 
-![用多个三次贝塞尔曲线绘制❤](./img/canvas/三次贝塞尔曲线.png)
+![用二次赛贝尔曲线绘制对话气泡](./img/canvas/二次贝赛尔曲线.png)      ![用多个三次贝塞尔曲线绘制❤](./img/canvas/三次贝塞尔曲线.png)
 
 #### 2.3.4 Path2D 对象
 
@@ -257,10 +254,14 @@ Path2D API 添加了`addPath`作为为对象添加 Path 的方法。适用于从
 ```javascript
 var p = new Path2D('M10 10 h 80 v 80 h -80 Z');
 /*这条路径先移动到点(M10 10)，再右移80个单位(h 80)，
-	然后下移80个单位(v 80)，接着左移80个单位(h -80)，再回到起点处(Z) */
+  然后下移80个单位(v 80)，接着左移80个单位(h -80)，再回到起点处(Z) */
 ```
 
-## 3.Colors
+---
+
+## 3.添加样式和颜色
+
+### 3.1 Colors 
 
 有两个属性可以给图形上色：
 
@@ -272,13 +273,25 @@ var p = new Path2D('M10 10 h 80 v 80 h -80 Z');
 > <font color=orange>Notice：</font>一旦设置了`strokeStyle`或`fillStyle`的值，这个新值就会成为新绘制的图形的默认值。如果要给每个图形上不同的颜色，需要重新设置`fillStyle`或`strokeStyle`的值。
 
 ```javascript
-// 通过循环输出显示调色板
+// fillStyle示例
 function draw() {
   let ctx = document.getElementById('canvas').getContext('2d');
-  for (let i=0; i<10; i++) {
-    for (let j=0; j<10; j++) {
-      ctx.fillStyle = `rgb(255, ${Math.floor(255-22.5*i)}, ${Math.floor(255-22.5*j)})`;
+  for (let i=0; i<6; i++) {
+    for (let j=0; j<6; j++) {
+      ctx.fillStyle = `rgb(255, ${Math.floor(255-42.5*i)}, ${Math.floor(255-42.5*j)})`;
       ctx.fillRect(j*25, i*25, 25, 25);
+    }
+  }
+}
+// strokeStyle示例
+function draw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+  for (var i=0;i<6;i++){
+    for (var j=0;j<6;j++){
+      ctx.strokeStyle = `rgb(0, ${Math.floor(255-42.5*i)}, ${Math.floor(255-42.5*j)})`;
+      ctx.beginPath();
+      ctx.arc(12.5+j*25,12.5+i*25,10,0,Math.PI*2,true);
+      ctx.stroke();
     }
   }
 }
@@ -286,15 +299,145 @@ function draw() {
 
 渲染出的结果：
 
-![循环出的调色盘](./img/canvas/调色盘.png)
+![循环出的调色盘](./img/canvas/调色盘.png)       ![调色圈圈](./img/canvas/调色圈圈.png)
+
+### 3.2 Transparency
+
+通过设置`globalAlpha`属性或使用一个半透明颜色作为轮廓或填充的样式：
+
+`globalAlpha = transparencyValue`
+
+这个属性影响到 Canvas 里所有图形的透明度，有效值的范围是 0.0 (完全透明) ～ 1.0 (完全不透明)，默认是 1.0。
+
+由于`strokeStyle`和`fillStyle`属性接受符合 CSS3 规范的颜色值，就意味着可以通过`rgba()`方法来设置颜色的透明度。
+
+### 3.3 Line styles
+
+可以通过一系列属性来设置线的样式：
+
+1. `lineWidth = value`：设置线条宽。
+2. `lineCap = type`：设置线条末端样式。
+3. `lineJoin = type`：设定线条与线条间接合处的样式。
+4. `miterLimit = value`：限制当两条线相交时交界处最大长度。交接处长度（斜线长度）指线条交接处内角顶点到外角顶点的长度。
+5. `getLineDash()`：返回一个包含当前虚线样式，长度为非负偶数的数组。
+6. `setLineDash(segments)`：设置当前虚线样式。
+7. `lineDashOffset = value`：设置虚线样式的起始偏移量。
+
+**理解线条是怎么画出来的：**
+
+是以线条的中间轴作为线条的路径，沿着路径向两边各延伸`lineWidth/2`。当线条两端的端点不是整数像素值，剩下距离整像素的区域，会以实际笔触颜色一半色调的颜色来填充整个区域。
+
+![线条半渲染现象](./img/canvas/线条网格.png)
+
+> <font color=orange>Notice：</font>不止X轴，Y轴也同样会出现半渲染的像素点。
+>
+> 不过这种行为的表现取决于当前的 lineCap 风格，它默认为 butt；可以通过将 lineCap 样式设置为 square 正方形，来得到与技术宽度线的半像素坐标一致的笔画，这样，端点轮廓的外边框将被自动扩展，来完全覆盖整个像素格。
+>
+> 只有路径的起点和终点受此影响：如果一个路径是通过`closePath()` 来封闭的，它是没有起点和终点的；相反的情况下，路径上的所有端点都与上一个点相连，下一段路径使用当前的 lineJoin 设置（默认为 miter），如果相连路径是水平和/或垂直，会导致相连路径的外轮廓根据相交点自动延伸，因此渲染出的路径轮廓会覆盖整个像素格。
+
+#### 3.3.1 lineCap
+
+`lineCap`属性的值决定了线段端点显示的样子，可能的值：
+
+- `butt`（默认）：端点直切。
+- `round`：端点为圆。
+- `square`：端点为正方形。
+
+![lineCap各个属性值的样式](./img/canvas/lineCap.png)
+
+#### 3.3.2 lineJoin
+
+`lineJoin`属性值决定了图形中两线段连接处所显示的样子，可能的值有：
+
+- `round`：圆滑连接。
+- `bevel`：平切连接。
+- `miter`（默认）：切线连接。
+
+![lineJoin](./img/canvas/lineJoin.png)
+
+**milterLimit 属性**
+
+`miter`线段直接夹角较大的，交点不会太远，但当夹角减少时，交点距离会呈指数级增大。
+
+`milterLimit`属性是用来设定外延交点与连接点的最大距离，如果交点大于这个值，连接效果会变成`bevel`。
+
+#### 3.3.3 使用虚线
+
+用`setLineDash()`和`lineDashOffset`属性来指定虚线样式。
+
+- `setLineDash()`方法接受一个数组来指定线段用于间隙的交替；
+- `lineDashOffset`属性设置起始偏移量。
+
+```javascript
+let ctx = document.getElementById('canvas').getContext('2d');
+let offset = 0;
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setLineDash([4, 2]); // 线段长4px 间隙长2px
+  ctx.lineDashOffset = -offset; // 设置偏移量
+  ctx.strokeRect(10, 10, 100, 100); // 绘制正方形
+}
+function march() {
+  offset++;
+  offset > 16 && (offset = 0);
+  draw();
+  setTimeout(march, 50); // 每50ms执行一次偏移
+}
+march();
+```
+
+#### 3.3.4 渐变 Gradients
+
+用线性或径向渐变来填充或描边。新建`canvasGradient`对象的方法：
+
+- `createLinearGradient(x1, y1, x2, y2)`： 接受4个参数，表示渐变的起点`(x1, y1)`和终点`(x2, y2)`。
+- `createLinearGradient(x1, y1, r1, x2, y2, r2)`：接受6个参数，前三个定义一个原点=`(x1, y1)`，半径=`r1`的圆；后三个参数则定义另一个原点=`(x2, y2)`，半径=`r2`的圆。
+
+`strokeStyle`和`fillStyle`属性都可以接受`canvasGradient`对象。
+
+创建出`canvasGradient`对象后，可以用`addColorsStop()`方法上色。
+
+`gradient.addColorStop(position, color)`：方法接受2个参数，`position`必须是一个 0.0 与 1.0 之间的数值，表示渐变中颜色所在的相对位置（0.5 表示颜色会出现在正中间）；`color`必须是一个有效的 CSS 颜色值。
+
+可以根据需要添加任意多个色标（color stops）。色标的定义是无所谓顺序的，但色标位置重复时，顺序就变得很重要。
+
+```javascript
+function draw() {
+  let ctx = document.getElementById('canvas').getContext('2d');
+  // blue sky & green land
+  let lingrad1 = ctx.createLinearGradient(0, 0, 0, 150);
+  lingrad1.addColorStop(0, '#00ABEB');
+  lingrad1.addColorStop(.5, '#FFF');
+  lingrad1.addColorStop(.5, '#26C000'); // 色标的位置重复时，顺序很重要
+  lingrad1.addColorStop(1, '#FFF');
+  ctx.fillStyle = lingrad1;
+  ctx.fillRect(0, 0, 150, 150);
+  // black pole
+  let lingrad2 = ctx.createLinearGradient(0, 50, 0, 95);
+  lingrad2.addColorStop(0, '#000');
+  lingrad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.strokeStyle = lingrad2;
+  ctx.strokeRect(50, 50, 50, 50);
+  // sunshine
+  let radgrad1 = ctx.createRadialGradient(125, 25, 10, 125, 25, 25);
+  radgrad1.addColorStop(0, '#ffdf26');
+  radgrad1.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = radgrad1;
+  ctx.fillRect(100, 0, 50, 50);
+  // ball
+  let radgrad2 = ctx.createRadialGradient(33, 96, 2, 30, 100, 10);
+  radgrad2.addColorStop(0, '#EEE');
+  radgrad2.addColorStop(.8, '#444');
+  radgrad2.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = radgrad2;
+  ctx.fillRect(20, 90, 20, 20);
+
+}
+```
 
 
 
-
-
-
-
-
+ 
 
 
 
