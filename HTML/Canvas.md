@@ -361,7 +361,7 @@ function draw() {
 
 `milterLimit`属性是用来设定外延交点与连接点的最大距离，如果交点大于这个值，连接效果会变成`bevel`。
 
-#### 3.3.3 使用虚线
+### 3.3 使用虚线
 
 用`setLineDash()`和`lineDashOffset`属性来指定虚线样式。
 
@@ -386,7 +386,7 @@ function march() {
 march();
 ```
 
-#### 3.3.4 渐变 Gradients
+### 3.4 渐变 Gradients
 
 用线性或径向渐变来填充或描边。新建`canvasGradient`对象的方法：
 
@@ -431,13 +431,169 @@ function draw() {
   radgrad2.addColorStop(1, 'rgba(255, 255, 255, 0)');
   ctx.fillStyle = radgrad2;
   ctx.fillRect(20, 90, 20, 20);
-
 }
 ```
 
+### 3.5 图案样式 Patterns
+
+`createPattern(image, type)`：该方法接受两个参数。`image`可以是一个 Image 对象的引用，或另一个 canvas 对象；`Type`必须是下面的字符串值之一：`repeat`、`repeat-x`、`repeat-y`、`no-repeat`。
+
+图案的应用和渐变类似，创建出一个 pattern 后，赋给`fillStyle`或`strokeStyle`属性即可。
+
+> <font color=orange>Notice：</font>在 Firefox 1.5(Gecko 1.8) 中用 canvas 对象作为`image`参数是无效的。
+>
+> 与 drawImage 不同，需要确认 image 对象已经装载完毕，否则图案可能效果是不对的。
+
+```javascript
+function draw() {
+  let ctx = document.getElementById('canvas').getContext('2d');
+  // 创建新image对象用作图案
+  let img = new Image();
+  img.src = 'https://mdn.mozillademos.org/files/222/Canvas_createpattern.png';
+  // 用img对象的onload来确保设置图案前图像已装载完毕
+  img.onload = function() {
+    let ptn = ctx.createPattern(img, 'repeat');
+    ctx.fillStyle = ptn;
+    ctx.fillRect(0, 0, 150, 150);
+  }
+}
+```
+
+### 3.6 阴影 Shadows
+
+- `shadowOffsetX = float`：`shadowOffsetX`设定阴影在 X 和 Y 轴的延伸距离，不受变换矩阵所影响，负值表示阴影会往左延伸，正值则表示会往右延伸，默认为0。
+-  `shadowOffsetY = float`：`shadowOffsetY`设定阴影在 Y 轴的延伸距离，不受变换矩阵所影响，负值表示阴影会往上延伸，正值表示会往右延伸，默认为0。
+
+### 3.7 Canvas 填充规则
+
+当用到`fill` / `clip` / `isPointinPath`可以选择一个填充规则，该填充规则根据某处在路径外或里来决定该处是否被填充，这对于与本路径相交或路径被嵌套的时候是有用的。
+
+两个可能的值：`"nonzero"`（默认，非零绕组规则）、`"evenodd"`（奇偶规则）。
+
+```javascript
+function draw() {
+  var ctx = document.getELementById('canvas').getContext('2d');
+  ctx.beginPath();
+  ctx.arc(50, 50, 30, 0, Math.PI*2, true);
+  ctx.arc(50, 50, 15, 0, Math.PI*2, true);
+  ctx.fill("evenodd");
+}
+```
+
+---
+
+## 4.绘制文本
+
+### 4.1 绘制文本
+
+Canvas 提供了2种方法来渲染文本：
+
+- `fillText(text, x, y [, maxWidth])`：在指定的`(x, y)`位置填充指定的文本，绘制的最大宽度是可选的。
+- `strokeText(text, x, y, [, maxWidth])`：在指定的`(x, y)`位置绘制文本边框（就是空心文字），绘制的最大宽度是可选的。
+
+当正常渲染的文字宽度 > 设置的绘制最大宽度，文字会被压缩。
+
+```javascript
+function draw() {
+  var ctx = document.getElementById('canvas').getContext('2d');
+  ctx.font = "48px serif";
+  ctx.fillText("Hello world", 10, 50);
+}
+```
+
+### 4.2 有样式的文本
+
+可以改变 Canvas 显示文本的方式：
+
+- `font = value`：当前用来绘制文本的样式。这个字符串使用和 CSS `font`属性相同的语法。默认的字体是`10px sans-serif`。
+- `textAlign = value `：文本对齐选项。可选的值包括：
+  - `start`（默认）：文本对齐线开始的地方。
+  - `end`：文本对齐界线结束的地方。
+  - `left`：文本左对齐。
+  - `right`：右对齐。
+  - `center`：居中对齐。
+- `textBaseline = value`：基线对齐选项。可能的值包括：
+  - `top`：文本基线在文本快顶部；
+  - `hanging`：文本基线是悬挂基线；
+  - `middle`：文本基线在文本块中间；
+  - `alphabetic`：文本基线是标准的字母基线；
+  - `ideographic`（默认）：文本基线是表意字基线，如果字符本身超出`ideographic`基线，那么`ideograhpic`基线位置在字符本身的底部；
+  - `bototm`：文本基线在文本块的底部，与`ideograhpic`基线不需要考虑下行字母。
+- `direction = value`：文本方向。可能的值包括：
+  - `ltr`：文本方向从左向右。
+  - `trl`：文本方向从右向左。
+  - `inherit`（默认）：根据情况继承 Canvas 元素或 Document。
+
+```javascript
+function draw() {
+  let ctx = document.getElementById('canvas').getContext('2d');
+  ctx.font = '48px serif';
+  // ctx.textBaseline = 'hanging';
+  ctx.fillText('Hello world', 10, 50);
+}
+```
+
+### 4.3 预测量文本宽度
+
+当需要获得更多的文本细节时，`measureText()`可以提供测量文本，它返回一个`TextMetrics`对象的宽度、所在像素，这些体现文本特性的属性。
+
+```javascript
+function draw() {
+  var ctx = docuemnt.getElementById('canvas').getContext('2d');
+  var text = ctx.measureText('foo'); // TextMetrics object
+  text.width;
+}
+```
+
+---
+
+## 5.使用图像
+
+引入图像到 Canvas 需要两步基本操作：
+
+1. 获得一个指向`HTMLImageElement`的对象或另一个 Canvas 元素的引用作为源，也可以通过提供一个 URL 的方式来使用图片。
+2. 使用`drawImage()`函数将图片绘制到画布上。
+
+### 5.1 获取需要绘制的图片
+
+Canvas 图片源的类型：
+
+- `HTMLImageElement`：这些图片是由`Image()`函数或`<img>`元素构造出来的。
+- `HTMLVideoElement`：用一个`<video>`元素作为图片源，可以从视频中抓取当前帧作为一个图像。
+- `HTMLCanvasElement`：可以使用另一个 Canvas 元素作为图片源。
+- `ImageBitmap`：这是一个高性能的位图，可以低延迟地绘制，它可以从上述所有源以及其他集中源中生成。
+
+这些源统一由`CanvasImageSource`类型来引用。
+
+有几种方式可以获取到需要在 Canvas 上使用的图片。
+
+1. **使用相同页面内的图片**
+
+   通过以下方法中的一种获得与 Canvas 相同页面内图片的引用：
+
+   - `document.images`集合；
+   - `document.getElementsByTagName()`方法；
+   - 如果知道想使用的指定图片的 ID，可以用`document.getElementById()`获得这个图片。
+
+2. **使用其他域名下的图片**
+
+   在`HTMLImageElement`上使用 crossOrigin 属性，可以请求加载其他域名上的图片。如果图片的服务器允许跨域访问这个图片，那么就可以使用这个图片而不污染 Canvas，否则使用这个图片将会污染 Canvas。
+
+3. **使用其他 Canvas 元素**
+
+   用`document.getElementsByTagName`或`document.getElementById`方法来获取其他 Canvas 元素。
+
+   一个常用的应用就是将第二个 Canvas 作为另一个大的 Canvas 的缩略图。
+
+   
 
 
- 
+
+
+
+<https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Using_images>
+
+
 
 
 
