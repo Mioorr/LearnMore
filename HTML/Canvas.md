@@ -653,7 +653,15 @@ Canvas 图片源的类型：
 
 `drawImage()`方法第三种形态：
 
-`drawImage(image, sx, sy, sWidth, Height)`：`width`和`height`用来控制当向 Canvas 画入时应该缩放的大小。
+`drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)`：`(sx, sy)`图片切片位置；`sWidth`和`sHeight`是图片切片宽高；`(dx, dy)`切片目标显示位置；`dWidth`和`dHeight`是切片目标显示宽高。
+
+![切片](./img/canvas/切片.jpg)
+
+### 5.4 控制图像的缩放行为
+
+Gecko 1.9.2 引入了`mozImageSmoothingEnable`属性，值为`false`时，图像不会平滑地缩放。默认是`true`。
+
+---
 
 
 
@@ -661,7 +669,7 @@ Canvas 图片源的类型：
 
 
 
-<https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Using_images>
+
 
 
 
