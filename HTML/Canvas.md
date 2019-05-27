@@ -585,13 +585,87 @@ Canvas 图片源的类型：
 
    一个常用的应用就是将第二个 Canvas 作为另一个大的 Canvas 的缩略图。
 
-   
+4. **由零开始创建图像**
+
+   用脚本创建一个新的`HTMLImageElement`对象。使用`Image()`构造函数比较方便。
+
+   当脚本执行后，图片开始装载。
+
+   ```javascript
+   var img = new Image(); // 创建一个img元素
+   // 若调用drawImage时图片没装载完，什么都不会发生
+   // 一些浏览器可能会抛出异常
+   // 因此应该用load事件保证不会在加载完毕前使用这个图片
+   img.onload = function() {
+     // 执行drawImage语句
+   }
+   img.src = 'myImage.png';
+   ```
+
+5. **通过 data: url 方式嵌入图像**
+
+   Data urls 允许使用一串 Base64 编码的字符串的方式来定义一个图片。
+
+   ```javascript
+   img.src = 'data:image/gift;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==';
+   ```
+
+   优点：① 图片内容即时可用，无须再到服务器兜一圈；② 可以将 CSS、JavaScript、HTML 和 图片全部封装在一起，迁移起来十分方便。
+
+   缺点：图像没法缓存，图片大的话内嵌的 url 数据会很长。
+
+6. **使用视频帧**
+
+   还可以使用`video`中的视频帧（即便视频是不可见的）。
+
+   ```javascript
+   function getMyVideo() {
+     var canvas =  document.getElementById('canvas');
+     if (canvas.getContext) {
+       var ctx = canvas.getContext('2d');
+       return document.getElementById('myvideo');
+     }
+   }
+   // 它将为这个视频返回HTMLVideoElement对象，它可以作为Canvas图片源
+   ```
+
+### 5.2 drawImage()
+
+一旦获得了源图对象，就可以使用`drawImage()`将它渲染到 Canvas 里。`drawImage()`有三种形态。
+
+#### 5.2.1 绘制图片
+
+`drawImage()`的第一种形态：
+
+`drawImage(image, x, y)`：`image`是 image 或 Canvas 对象；`(x, y)`是其在 Canvas 里的起始坐标。
+
+> SVG 图像必须在`<svg>`根指定元素的宽度和高度。
+
+#### 5.2.2 缩放
+
+`drawImage()`方法第二种形态：
+
+`drawImage(image, x, y, width, height)`：`width`和`height`用来控制当向 Canvas 画入时应该缩放的大小。
+
+> <font color=orange>Notice：</font>图像可能会因为大幅度的缩放而变得起杂点或模糊。如果图像里有文字，最好不要进行缩放，否则那样处理后可能图像里的文字会变得无法辨认。
+
+#### 5.2.3 切片
+
+`drawImage()`方法第三种形态：
+
+`drawImage(image, sx, sy, sWidth, Height)`：`width`和`height`用来控制当向 Canvas 画入时应该缩放的大小。
+
+
 
 
 
 
 
 <https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Using_images>
+
+
+
+
 
 
 
