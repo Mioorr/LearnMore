@@ -663,6 +663,128 @@ Gecko 1.9.2 引入了`mozImageSmoothingEnable`属性，值为`false`时，图像
 
 ---
 
+## 6.变形
+
+### 6.1 状态的保存和恢复
+
+- `save()`
+
+  保存 Canvas。
+
+- `restore()`
+
+  恢复 Canvas 状态。
+
+以上两个方法都没有参数。Canvas 的状态就是当前画面应用的所有样式和变形的一个快照。
+
+Canvas 状态存储在栈中，每当`save()`方法被调用后，当前的状态就被推送到栈中保存。一个回话状态包括：
+
+- 当前应用的变形（移动、旋转、缩放）。
+- `strokeStyle`, `fillStyle`, `globalAlpha`, `lineWidth`, `lineCap`, `lineJoin`, `miterLimit`, `shadowOffsetX`, `shadowOffsetY`, `shadowBlur`, `shadowColor`, `globalCompositeOperation`的值。
+- 当前的裁切路径。
+
+每次调用`restore()`，上一个保存的状态就从栈中弹出，所有设定都恢复。
+
+```javascript
+function draw() {
+  let ctx = document.getElementById('canvas').getContext('2d');
+
+  ctx.fillRect(0, 0, 150, 150);
+  ctx.save(); // 保存当前状态1
+
+  ctx.fillStyle = '#09F'; // 改变颜色配置
+  ctx.fillRect(15, 15, 120, 120); // 使用新的设置绘制一个矩形
+  ctx.save(); // 保存当前状态2
+
+  ctx.fillStyle = '#FFF'; // 再次改变颜色配置
+  ctx.globalAlpha = 0.5; // 这次的配置不进行保存
+  ctx.fillRect(30, 30, 90, 90); // 再使用新的设置绘制一个矩形
+
+  ctx.restore(); // 重载上次保存的配置
+  ctx.fillRect(45, 45, 60, 60); // 使用上次的配置绘制一个矩形
+
+  ctx.restore(); // 重载上上次保存的配置
+  ctx.fillRect(60, 60, 30, 30); // 使用加载的配置绘制一个矩形
+}
+```
+
+### 6.2 移动
+
+`translate(x, y)`：用来移动 Canvas 和它的原点到一个不同的位置。方法接受两个参数，x 是左右偏移量，y 是上下偏移量。
+
+最好在做变形之前先保存状态。调用`restore()`往往比手动恢复原先的状态要简单得多。
+
+### 6.3 旋转
+
+`rotate(angle)`：用于以原点为中心旋转 Canvas。只接受一个参数——旋转的角度。以顺时针为方向，弧度为单位，旋转的中心使用是 Canvas 的原点。
+
+```javascript
+function draw() {
+  let ctx = document.getElementById('canvas').getContext('2d');
+  ctx.translate(75,75);
+
+  for (var i=1;i<6;i++){ // Loop through rings (from inside to out)
+    ctx.save();
+    ctx.fillStyle = 'rgb('+(51*i)+','+(255-51*i)+',255)';
+
+    for (var j=0;j<i*6;j++){ // draw individual dots
+      ctx.rotate(Math.PI*2/(i*6));
+      ctx.beginPath();
+      ctx.arc(0,i*12.5,5,0,Math.PI*2,true);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+}
+```
+
+### 6.4 缩放
+
+`scale(x, y)`：增减图形在 Canvas 中的像素数，对形状、位图进行缩小或放大。x 为水平缩放因子，y 为垂直缩放因子。> 1 放大，< 1缩小，默认值=1，是实际大小。
+
+`translate(0, canvas.height); scale(1, -1);`会以 y 轴为对称轴镜像反转。
+
+### 6.5 变形
+
+`transform(m11, m12, m21, m22, dx, dy)`：将当前的变形矩阵乘以一个基于自身参数的矩阵。
+
+```javascript
+m11 m21 dx
+m12 m22 dy
+0 	0 	1
+```
+
+- m11：水平方向的缩放；
+- m12：水平方向的倾斜偏移；
+- m21：竖直方向的倾斜偏移；
+- m22：竖直方向的缩放；
+- dx：水平方向的移动；
+- dy：竖直方向的移动。
+
+> <font color=orange>Note：</font>如果任意一个参数是无限大，变形矩阵也必须被标记为无限大，否则会抛出异常。
+
+`setTransform(m11, m12, m21, m22, dx, dy)`将当前的变形矩阵重置为单矩阵，然后用相同的参数调用`transform()`。从根本上说，改方法是取消了当前变形，然后设置为指定的变形，一步完成。
+
+`resetTransform()`重置当前变形为单矩阵，它和调用以下语句是一样的：
+
+```javascript
+ctx.setTransform(1, 0, 0, 1, 0, 0);
+```
+
+---
+
+## 7.组合
+
+### 7.1 globalCompositeOperation
+
+`globalCompositeOperation = type`：
+
+这个属性设定了在画新图形时采用的遮盖策略，其值是一个标识12种遮盖方式的字符串。
+
+
+
+### 7.2 裁切路径
 
 
 
@@ -674,6 +796,21 @@ Gecko 1.9.2 引入了`mozImageSmoothingEnable`属性，值为`false`时，图像
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+MDN | 12种覆盖方式
+
+<https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Compositing>
 
 
 
