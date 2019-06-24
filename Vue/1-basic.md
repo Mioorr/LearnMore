@@ -1074,5 +1074,369 @@ new Vue({
   ```
 
   > 如果`v-model`表达式的初始值未能匹配任何选项，`selected`元素将被渲染为未选中状态。在 IOS 中，这会导致用户无法选择第一个选项，因为这样的情况下 IOS 不会触发 change 事件。因此更推荐提供一个空值的禁用选项。
+  
+- 多选时：
+
+  ```html
+  <select v-model="selected" multiple style="width: 50px;">
+    <option>A</option>
+    <option>B</option>
+    <option>C</option>
+  </select>
+  <br>
+  <span>Selected: {{ selected }}</span>
+  ```
+
+  ```javascript
+  data: {
+    selected: []
+  }
+  ```
+
+- 用`v-for`渲染的动态选项：
+
+  ```html
+  <select v-model="selected">
+    <option v-for="option in options" v-bind:value="option.value">
+    	{{ option.text }}
+    </option>
+  </select>
+  ```
+
+### 7.2 值绑定
+
+对于单选按钮、复选框、选择框的选项，`v-model`绑定的值通常是静态字符串（对于复选框也可以是布尔值）。
+
+用`v-bind`可以实现将值绑定到 Vue 实例的一个动态属性上，并且这个属性的值可以不是字符串。
+
+**复选框**
+
+```html
+<input
+  type="checkbox"
+  v-model="toggle"
+  true-value="yes"
+  false-value="no"
+>
+<!--
+  选中时 toggle="yes"
+  未选中 toggle="no"
+-->
+```
+
+> <font color=orange>Notice：</font>这里的`true-value`和`false-value`特性不会影响输入控件的`value`特性，因为浏览器在提交表单时不会包含未被选中的复选框。如果要确保表单中这两个值中的一个能被提交，最好换用单选按钮。
+
+**单选按钮**
+
+```html
+<input type="radio" v-model="pick" v-bind:value="a">
+<!-- 当选中时 pick === a -->
+```
+
+**选择框的选项**
+
+```html
+<selected v-model="selected">
+  <!-- 内联对象字面量 -->
+  <option v-bind:value="{ number: 123 }">123</option>
+</selected>
+<!-- 选中时：
+  selected值的类型 => object
+  selected.number => 123
+-->
+```
+
+### 7.3 修饰符
+
+`.lazy`
+
+默认情况下，`v-model`在每次`input`事件触发后将输入框的值与数据进行同步（除使用输入法组合文字时）。添加`lazy`修饰符，使用`change`事件进行同步。
+
+```html
+<!-- 在change时而不是input更新时 -->
+<input v-model.lazy="msg">
+```
+
+`.number`
+
+自动将用户的输入值转为数值类型。如果这个值无法被`parseFloat()`解析，则会返回原始值。
+
+`.trim`
+
+自动过滤用户输入的首尾空白字符。
+
+### ❤7.4 在组件上使用`v-model`
 
 
+
+---
+
+## 8. 组件基础
+
+### 8.1 基本语法
+
+组件是可复用的 Vue 实例，且带有一个名字。为了能在模板中使用，这些组件必须先注册，以便 Vue 能够识别。
+
+```javascript
+Vue.component('component-name', {
+  // ...
+  template: 'HTML Code ...'
+})
+```
+
+可以在一个通过`new Vue`创建的 Vue 根实例中，把组件作为自定义元素来使用：
+
+```html
+<div id="components-demo">
+  <component-name />
+</div>
+```
+
+因为组件是可复用的 Vue 实例，所以它们与`new Vue`接收相同的选项（如：`data`、`computed`、`watch`、`methods`以及生命周期钩子等）。仅有的例外是像`el`这样的根实例特有的选项。
+
+### 8.2 组件的复用
+
+组件可以复用无数次，每用一次组件，就会有一个它的新实例被创建。
+
+#### 8.2.1 data 必须是一个函数
+
+一个组件的`data`选项必须是一个函数，因此每个实例可以维护一份被返回对象的独立拷贝：
+
+```javascript
+data: function () {
+  return {
+    props: values
+  }
+}
+```
+
+如果 Vue 没有这条规则，被复用的相同组件之间的数据就会互相影响。
+
+### 8.3 组件的组织
+
+通常一个应用会以一颗嵌套的组件树的形式来组织：
+
+![组件树](img/components-tree.png)
+
+组件的注册有2中类型：
+
+- **全局注册**：
+
+  ```javascript
+  Vue.component('component-name', {
+    // options ...
+  })
+  ```
+
+  全局注册的组件可以用在其被注册之后的任何（通过`new Vue`）新建的 Vue 根实例，包括其组件树中的所有子组件的模板中。
+
+- **局部注册**
+
+### 8.4 通过 prop 向子组件传递数据
+
+Prop 是在组件上注册的一些自定义特性。当一个值传递给一个 prop 特性的时候，它就变成了那个组件实例的一个属性。
+
+```javascript
+Vue.component('blog-post', {
+  props: ['title'],
+  template: '<h3>{{ title }}</h3>'
+})
+```
+
+一个组件默认可以拥有任意数量的 prop，任何值都可以传递给 prop。
+
+prop 被注册之后，就可以把数据作为一个自定义特性传递进来：
+
+```html
+<blog-post title="My journey with Vue" />
+<blog-post title="Blogging with Vue" />
+<blog-post title="Why Vue is so fun" />
+```
+
+可以使用`v-bind`来动态传递 prop，就像模板中 HTML 元素自身的特性一样。
+
+### 8.5 单个根元素
+
+每个组件只能有一个根元素，如果组件中有多个要渲染的元素，可以将模板的内容包裹在一个父元素内。
+
+如果有太多的值需要传递，可以只设置一个 prop，将要传递的值作为一个对象传给 prop，子组件中通过这个 prop 的属性来获取值。这样就可以不用在模板调用组件时，写太多 prop 相关的代码。
+
+```html
+<blog-post
+  v-for="post in posts"
+  v-bind:key="post.id"
+  v-bind:title="post.title"
+  v-bind:content="post.content"
+  v-bind:publishedAt="post.publishedAt"
+  v-bind:comments="post.comments"
+/>
+<!-- 所有的值放在一个object中传递 -->
+<blog-post
+  v-for="post in posts"
+  v-bind:key="post.id"
+  v-bind:post="post"
+/>
+```
+
+### 8.6 监听子组件事件
+
+子组件可以通过调用内置的`$emit()`方法并传入事件名称来触发一个事件。
+
+```html
+<blog-post
+  v-on:add-num="number += 1"
+/>
+<!-- 这里的事件名称就是add-num -->
+```
+
+```javascript
+Vue.component('blog-post', {
+  props: ['post'],
+  template: `
+    <div class="blog-post">
+      <h3>{{ post.title }}</h3>
+      <button v-on:click="$emit('add-num')">Add Number</button>
+    </div>
+  `
+})
+```
+
+**使用事件抛出一个值**
+
+通过将值作为`$emit()`的第二个参数传递来为事件抛出一个特定的值。
+
+```html
+<button v-on:click="$emit('enlarge-text', 0.1)">Enlarge text</button>
+```
+
+然后当在父级组件监听这个事件时，通过 `$event`访问到被抛出的这个值：
+
+```html
+<blog-post
+  ...
+  v-on:enlarge-text="postFontSize += $event"
+/>
+```
+
+如果这个事件处理函数是一个方法：
+
+```html
+<blog-post
+  ...
+  v-on:enlarge-text="onEnlargeText"
+/>
+```
+
+那么这个值将会作为第一个参数传入这个方法：
+
+```javascript
+methods: {
+  onEnlargeText: function (enlargeAmount) {
+    this.postFontSize += enlargeAmount 
+  }
+}
+```
+
+**在组件上使用 v-model**
+
+> <font color=pink>Remember：</font>
+>
+> ```html
+> <input v-model="searchText">
+> <!-- 等价于 -->
+> <input
+>   v-bind:value="searchText"
+>   v-on:input="searchText = $event.target.value"
+> >
+> ```
+
+自定义事件也可以用于创建支持`v-model`的自定义输入组件。
+
+```html
+<custom-input
+  v-bind:value="searchText"
+  v-on:input="searchText = $event"
+/>
+```
+
+为了让它正常工作，这个组件内的`input`必须：
+
+- 将其`value`特性绑定到一个名叫`value`的 prop 上。
+- 在其`input`事件被触发时，将新的值通过自定义的`input`事件抛出。
+
+```javascript
+Vue.component('custom-input', {
+  props: ['value'],
+  template: `
+    <input
+      v-bind:value="value"
+      v-on:input="$emit('input', $event.target.value)"
+    >
+  `
+})
+```
+
+```html
+<custom-input v-model="searchText" />
+```
+
+### 8.7 通过插槽分发内容
+
+Vue 有自定义的`<slot>`元素来向插槽添加内容：
+
+```javascript
+Vue.component('alert-box', {
+  template: `
+    <div class="demo-alert-box">
+      <strong>Error!</strong>
+      <slot></slot>
+    </div>
+  `
+})
+```
+
+```html
+<alert-box>Something bad happened.</alert-box>
+```
+
+这样，组件中的文本就会被很自然地插入到了`slot`中，渲染的结果是不带`<slot>`元素的。
+
+### 8.8 动态组件
+
+通过 Vue 的`<component>`元素加`is`特性，来实现不同组件之间的动态切换。
+
+```html
+<component v-bind:is="currentTabComponent"></component>
+```
+
+`currentTabComponent`可以是：
+
+- 一个已注册组件的名字。
+- 一个组件的选项对象。
+
+### 8.9 解析 DOM 模板时的注意事项
+
+有些 HTML 元素，对于哪些元素可以出现在其内部是有严格限制的。而有些元素，只能出现在其他某些特定的元素内部。
+
+这会导致使用有约束条件的元素时遇到一些问题。
+
+```html
+<table>
+  <!-- 这个自定义组件会被作为无效的内容提升到外部，导致最终渲染结果出错 -->
+  <blog-post-row></blog-post-row>
+</table>
+```
+
+`is`特性可以提供一个变通的办法：
+
+```html
+<table>
+  <tr is="blog-post-row"></tr>
+</table>
+```
+
+> <font color="orange">Notice：</font>如果从一下来源使用模板，这条限制是不存在的：
+>
+> - 字符串（如：`template:'...'`）；
+> - 单文件组件（`.vue`）
+> - `<script type="text/x-template">`
