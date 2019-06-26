@@ -163,7 +163,7 @@ Vue.component('blog-post', {
 
 ```html
 <!-- 在HTML中是短横线分隔式 -->
-<blog-post post-title="hello" />
+<blog-post post-title="hello"></blog-post>
 ```
 
 > 如果使用字符串模板，就没有这个限制了。
@@ -191,7 +191,7 @@ props: {
 **传递静态 prop**
 
 ```html
-<blog-post title="My journey with Vue" />
+<blog-post title="My journey with Vue"></blog-post>
 ```
 
 **传递动态 prop**
@@ -200,40 +200,40 @@ props: {
 
 ```html
 <!-- 动态赋予一个变量的值 -->
-<blog-post v-bind:title="post.title" />
+<blog-post v-bind:title="post.title"></blog-post>
 <!-- 动态赋予一个复杂表达式的值 -->
 <blog-post
   v-bind:title="post.title + ' by ' + post.author.name"
-/>
+></blog-post>
 ```
 
 #### 2.3.1 传入一个数字
 
 ```html
 <!-- 虽然42是静态的，仍然需要v-bind来告诉Vue这是一个 JS 表达式而不是一个字符串 -->
-<blog-post v-bind:likes="42" />
+<blog-post v-bind:likes="42"></blog-post>
 <!-- 用一个变量进行动态赋值 -->
-<blog-post v-bind:likes="post.likes" />
+<blog-post v-bind:likes="post.likes"></blog-post>
 ```
 
 #### 2.3.2 传入一个布尔值
 
 ```html
 <!-- 包含 prop 没有值的情况在内，都意味着true -->
-<blog-post is-published />
+<blog-post is-published></blog-post>
 <!-- false是静态的，仍然需要v-bind告诉Vue这是一个JS表达式 -->
-<blog-post v-bind:is-published="false" />
+<blog-post v-bind:is-published="false"></blog-post>
 <!-- 用一个变量进行动态赋值 -->
-<blog-post v-bind:is-published="post.isPublished" />
+<blog-post v-bind:is-published="post.isPublished"></blog-post>
 ```
 
 #### 2.3.3 传入一个数组
 
 ```html
 <!-- 数组是静态的，仍需要v-bind告诉Vue这是一个JS表达式 -->
-<blog-post v-bind:comment-ids="[234, 266, 273]" />
+<blog-post v-bind:comment-ids="[234, 266, 273]"></blog-post>
 <!-- 用一个变量进行动态赋值 -->
-<blog-post v-bind:comment-ids="post.commentIds" />
+<blog-post v-bind:comment-ids="post.commentIds"></blog-post>
 ```
 
 #### 2.3.4 传入一个对象
@@ -244,9 +244,9 @@ props: {
     name: 'Vernoica',
     company: 'Veridian Dynamics'
   }"
-/>
+></blog-post>
 <!-- 用一个变量进行动态赋值 -->
-<blog-post v-bind:author="post.author" />
+<blog-post v-bind:author="post.author"></blog-post>
 ```
 
 #### 2.3.5 传入一个对象的所有属性
@@ -261,9 +261,9 @@ post: {
 ```
 
 ```html
-<blog-post v-bind="post" />
+<blog-post v-bind="post"></blog-post>
 <!-- 等价于 -->
-<blog-post v-bind:id="post.id" v-bind:title="post.title" />
+<blog-post v-bind:id="post.id" v-bind:title="post.title"></blog-post>
 ```
 
 ### 2.4 单向数据流
@@ -371,7 +371,7 @@ Vue.component('blog-post', {
 假设你通过一个 Bootstrap 插件使用了一个第三方的`<bootstrap-date-input>`组件，这个插件需要在其`<input>`上用到一个`data-date-picker`特性，可以将这个特性添加到组件的实例上：
 
 ```html
-<bootstrap-date-input data-date-picker="activated" />
+<bootstrap-date-input data-date-picker="activated" ></bootstrap-date-input>
 ```
 
 然后这个 `data-date-picker="activated"` 特性就会自动添加到 `<bootstrap-date-input>` 的根元素上。
@@ -390,7 +390,7 @@ Vue.component('blog-post', {
 <bootstrap-date-input
   data-date-picker="activated"
   class="date-picker-theme-dark"
-/>
+></bootstrap-date-input>
 ```
 
 这样出现了2个class：
@@ -448,7 +448,7 @@ Vue.component('base-Vue.component('base-input', {
   v-model="username"
   required
   placeholder="Enter your username"
-/>
+></base-input>
 ```
 
 ---
@@ -484,7 +484,7 @@ Vue.component('base-checkbox', {
 
 ```html
 <!-- 现在在这个组件上使用v-model -->
-<base-checkbox v-model="lovingVue" />
+<base-checkbox v-model="lovingVue"></base-checkbox>
 <!-- lovingVue的值会传入名为checked的prop，当<base-checkbox>触发一个change事件并附带一个新的值时，这个lovingVue的属性会被更新 --> 
 ```
 
@@ -495,7 +495,7 @@ Vue.component('base-checkbox', {
 通过使用`v-on`的`.native`修饰符，在一个组件的根元素上直接监听一个原生事件。
 
 ```html
-<base-input v-on:focus.native="onFocus" />
+<base-input v-on:focus.native="onFocus"></base-input>
 ```
 
 但这个方法在监听一个类似`<input>`的非常特定的元素时，并不一定成功。比如`<base-input>`组件可能做了重构，根元素实际上是一个`<label>`：
@@ -564,7 +564,20 @@ Vue.component('base-input', {
 建议以`update:myPropName`的模式触发事件来实现双向绑定。
 
 ```javascript
-this.$emit('update:title', newTitle)
+Vue.component('sync-demo', {
+  props: ['title'],
+  data () {
+    return {
+      newTitle: 'This is new title'
+    }
+  },
+  template: `
+    <div>
+      <p>{{ title }}</p>
+      <button @click="$emit('update:title', newTitle)">Update</button>
+    </div>
+  `
+})
 ```
 
 然后父组件可以监听那个事件并根据需要更新一个本地的数据属性。
@@ -573,26 +586,208 @@ this.$emit('update:title', newTitle)
 <text-document
   v-bind:title="doc.title"
   v-on:update="doc.title = $event"
-/>
+></text-document>
 ```
 
 为方便起见，Vue 为这种模式提供了一个缩写：`.sync`修饰符。
 
 ```html
-<text-document v-bind:title.sync="doc.title" />
+<text-document v-bind:title.sync="doc.title"></text-document>
 ```
 
+> <font color=orange>Notice：</font>带有`.sync`修饰符的`v-bind`==不能==和表达式一起使用，只能提供想要绑定的属性名。
 
+当用一个对象同时设置多个 prop 时，可以将 `.sync`修饰符和`v-bind`配合使用：
 
+```html
+<text-document v-bind.sync="doc"></text-document>
+<!-- 这样会把doc对象中的每个属性都作为一个独立的prop传入，然后各自添加用于更新的v-on监听器 -->
+```
 
+> <font color=orange>Notice：</font>将`v-bind.sync`用在一个字面量的对象上（如`v-bind.sync="{ title: doc.title }"`）是无法正常工作的，因为在解析一个这样的复杂表达式的时候，有很多边缘情况需要考虑。
 
+---
 
+## 4. 插槽
 
+### 4.1 插槽内容
 
+Vue 将`<slot>`元素作为承载分发内容的出口。
 
+```html
+<!-- 组件navigation-link的模板 -->
+<a
+  v-bind:href="ur"
+  class="nav-link"
+>
+  <slot></slot>
+</a>
+<!-- 在父组件中这样合成组件 -->
+<navigation-link url="/profile">
+  Your Profile
+</navigation-link>
+<!-- 组件渲染的时候，slot元素会被替换成Your Profile -->
+```
 
+插槽内可以包含任何模板代码，包括 HTML 甚至其它组件。
 
+如果组件定义模板内没有包含`<slot>`元素，则该组件起始标签和结束标签之间的任何内容都会被抛弃。
 
+插槽可以访问到当前作用域的实例属性，但不能访问这个组件的作用域。
 
+> **<font color=pink>Remember：</font>**父级组件模板里的所有内容都是在父级作用域中编译的；子模板里的所有内容都是在子作用域中编译的。
 
+### 4.2 后备内容
+
+插槽的后备内容，只会在没有提供内容的时候被渲染。
+
+```html
+<!-- 组件模板 -->
+<button type="submit">
+  <!-- 设置后备内容 -->
+  <slot>Submit</slot>
+</button>
+<!-- 在父级组件中时候用这个组件时不提供任何插槽内容 -->
+<submit-button></submit-button>
+<!-- 这个时候后备内容就会被渲染 -->
+```
+
+但是如果在插槽中提供内容，后备内容就会被取代。
+
+### 4.3 具名插槽
+
+有些情况下需要多个插槽，对于这种情况，`slot`元素有一个特殊的特性`name`，这个特性可以用来定义额外的插槽。
+
+```html
+<div class="container">
+  <header>
+    <slot name="header"></slot>
+  </header>
+  <main>
+    <slot></slot>
+  </main>
+  <footer>
+    <slot name="footer"></slot>
+  </footer>
+</div>
+```
+
+一个不带`name`的`<slot>`出口会带有隐含的名字“default”。
+
+在向具名插槽提供内容的时候，可以在一个`<template>`元素上使用`v-slot`指令，并以`v-slot`的参数的形式提供其名称：
+
+```html
+<base-layout>
+  <template v-slot:header>
+    <h1>Here might be a page title</h1>
+  </template>
+  <p>A paragraph for the main content.</p>
+  <p>And another one.</p>
+  <template v-slot:footer>
+    <p>Here's some contact info</p>
+  </template>
+</base-layout>
+```
+
+这样`<template>`元素中的所有内容都会被传入响应的插槽，任何没有被包裹在带有`v-slot`的`<template>`中的内容都会被视为默认插槽的内容。
+
+> <font color=orange>Notice：</font>`v-slot`只能添加在一个`<template>`上（提供的内容只有默认插槽的情况除外）。
+
+### 4.4 作用于插槽
+
+为了让子组件作用域的数据能在父级的插槽内容可用，可以将子组件的数据作为`<slot>`元素的一个特性绑定上去：
+
+```html
+<span>
+  <slot v-bind:user="user">
+    {{ user.lastName }}
+  </slot>
+</span>
+```
+
+绑定在`<slot>`元素上的特性被称为**插槽 prop**。在父级作用域中，可以给`v-slot`带一个值来定义提供给插槽 prop 的名字：
+
+```html
+<current-user>
+  <template v-slot:default="slotProps">
+    {{ slotProps.user.firstName }}
+  </template>
+</current-user>
+```
+
+#### 4.4.1 独占默认插槽的缩写语法
+
+当被提供的内容只有默认插槽时，组件的标签可以被当做插槽的模板来使用，这样就可以把`v-slot`直接用在组件上：
+
+```html
+<current-user v-slot:default="slotProps">
+  {{ slotProps.user.firstName }}
+</current-user>
+```
+
+还可以更简化，不带参数的`v-slot`被假定对应默认插槽：
+
+```html
+<current-user v-slot="slotProps">
+  {{ slotProps.user.firstName }}
+</current-user>
+```
+
+> **<font color=orange>Notice：</font>**默认插槽的缩写语法不能和具名插槽混用，因为它会导致作用域不明确。
+
+#### 4.4.2 解构插槽 prop
+
+作用域插槽的内部工作原理是将你的插槽内容包括在一个传入单个参数的函数里：
+
+```javascript
+function (slotProps) {
+  // 插槽内容
+}
+```
+
+`v-slot`的值实际上可以是任何能够作为函数定义中的参数的 JavaScript 表达式。所以在支持的环境下（单文件组件或现代浏览器），也可以使用解构来传入具体的插槽 prop。
+
+```html
+<current-user v-slot="{ user }">
+  {{ user.firstName }}
+</current-user>
+```
+
+它也开启了 prop  重命名等其他可能：
+
+```html
+<current-user v-slot="{ user: person }">
+  {{ person.firstName }}
+</current-user>
+```
+
+也可以定义后备内容，用于插槽 prop 是 undefined 的情况：
+
+```html
+<current-user v-slot="{ user = { firstName: 'Guest' } }">
+  {{ user.firstName }}
+</current-user>
+```
+
+### 4.5 动态插槽名
+
+动态指令参数也可以用在`v-slot`上来定义动态的插槽名：
+
+```html
+<base-layout>
+  <template v-slot:[dynamicSlotName]>
+    <!-- ... -->
+  </template>
+</base-layout>
+```
+
+### 4.6 具名插槽的缩写
+
+`v-slot:`的缩写是：`#`。该参数只在其有参数时才可用，而且必须要使用明确的插槽名（动态变量也是可以的，只要其值是明确的）。
+
+---
+
+## 5. 动态组件 & 异步组件
+
+### 5.1 在动态组件上使用`keep-alive`
 
