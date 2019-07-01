@@ -791,3 +791,261 @@ function (slotProps) {
 
 ### 5.1 在动态组件上使用`keep-alive`
 
+用于将失活的组件缓存。
+
+比如当在多标签界面切换时，在一个标签进行了一些操作，再切换至一个新的标签，当切换回原来的标签时，原来的标签页刷新回初始状态，而不是展示原来操作过的状态。为了能够将这个更改过的状态缓存下来，再次回到这个标签页的时候能够展示离开时的状态，可以使用`keep-alive`元素将其动态组件包裹起来。
+
+```html
+<keep-alive>
+  <component v-bind:is="currentTabComponent"></component>
+</keep-alive>
+```
+
+> <font color=orange>Notice：</font>`<keep-alive>`要求被切换到的组件都有自己的名字，不管是通过组件的`name`选项还是局部 / 全局注册的。
+
+### 5.2 异步组件
+
+Vue 允许以一个工厂函数的方式定义组件，这个工厂函数会异步解析组件的定义。Vue 只有在这个组件需要被渲染的时候才会触发这个工厂函数，而且会把结果缓存起来供之后重渲染。
+
+```javascript
+Vue.component('async-example', function (resolve, reject) {
+  setTimeout(function () { // 这里的setTimeout为演示用
+    // 向resolve回调传递组件定义
+    resolve({
+      template: '<div>I am async!</div>'
+    })
+  }, 1000)
+})
+```
+
+这个工厂函数会收到一个 `resolve` 回调，这个回调函数会在从服务器得到组件定义时被调用。也可以调用 `reject(reason)` 来表示加载失败。
+
+推荐将异步组件和 webpack 的 code-splitting 功能一起配合使用：
+
+```javascript
+Vue.component('async-webpack-example', function (resolve) {
+  // require会告诉webpack自动将构建代码切割成多个包
+  // 这些包会通过Ajax请求加载
+  require(['./my-async-component'], resolve)
+})
+```
+
+也可以在工厂函数中返回一个 Promise，所以把 webpack2 和 ES2015 语法加在一起，可以写成这样：
+
+```javascript
+Vue.component(
+  'async-webpack-example',
+  // 这个import函数会返回一个Promise对象
+  () => import('./my-async-component')
+)
+```
+
+使用局部注册的时候也可以直接提供一个返回 Promise 的函数：
+
+```javascript
+new Vue({
+  // ...
+  components: {
+    'my-component': () => import('./my-async-component')
+  }
+})
+```
+
+#### 5.2.1 处理加载状态
+
+这里的异步组件工厂函数也可以返回一个这样格式的对象：
+
+```javascript
+const AsyncComponent = () => ({
+  // 需要加载的组件（应该是个Promise对象）
+  component: import('./MyComponent.vue'),
+  // 异步加载时使用的组件
+  loading: LoadingComponent,
+  // 加载失败时使用的组件
+  error: ErrorComponent,
+  // 展示加载时组件的延时，默认是200ms
+  delay: 200,
+  // 若提供了超时时间且组件加载超时了，则使用加载失败时使用的组件，默认为Infinity
+  timeout: 3000
+})
+```
+
+---
+
+## 6.处理边界情况
+
+### 6.1 访问元素 & 组件
+
+多数情况下，最好不要触达另一个组件实例内部或手动操作 DOM 元素。
+
+#### 6.1.1 访问根实例
+
+在每个`new Vue`实例的子组件中，其根实例可以通过`$root`属性进行访问，所有的子组件都可以将这个实例作为一个全局 store 来访问或使用。
+
+```javascript
+// Vue根实例
+new Vue({
+  data: {
+    foo: 1
+  },
+  computed: {
+    bar: function () { /* ... */ }  
+  },
+  methods: {
+    baz: function () { /* ... */ }
+  }
+})
+
+// 子组件
+this.$root.foo // 获取根组件的数据
+this.$root.foo = 2 // 写入根组件的数据
+this.$root.bar // 访问根组件的计算属性
+this.$root.baz() // 调用根组件的方法
+```
+
+#### 6.1.2 访问父级组件实例
+
+`$parent`属性可以用来从一个子组件访问父组件的实例。通过这个属性，可以在后期随时触达父级组件替代将数据以 prop 形式传入子组件的方式。
+
+但是这种方式构建出来的组件很容易出现问题。
+
+#### 6.1.3 访问子组件实例或子元素
+
+通过`ref`特性为一个子组件赋予一个  ID 引用：
+
+```html
+<base-input ref="usernameIput"></base-input>
+```
+
+然后在这个组件里通过`$refs`来访问这个组件的实例：
+
+```javascript
+this.$refs.usernameInput
+```
+
+如，程序化地从一个父级组件聚焦这个输入框。
+
+```html
+<input ref="input">
+```
+
+然后可以在其组件定义方法：
+
+```javascript
+methods: {
+  focus: function () {
+    this.$refs.input.focus() // 用来从父级组件聚焦输入框
+  }
+}
+```
+
+这样就允许父级组件通过下面的代码聚焦`<base-input>`里的输入框：
+
+```javascript
+this.$refs.usernameInput.focus()
+```
+
+#### 6.1.4 依赖注入
+
+`provide`选项允许指定要提供给后代组件的数据 / 方法。
+
+```java
+provide: function () {
+  return {
+    getMap: this.getMap
+  }
+}
+```
+
+然后在任何后代组件里都可以使用`inject`选项来接收，而不需要暴露这个组件实例：
+
+```javascript
+inject: ['getMap']
+```
+
+可以把依赖注入看做一部分“大范围有效的 prop“，除了：
+
+- 祖先组件不需要知道哪些后代组件使用它提供的属性；
+- 后代组件不需要知道被注入的属性来自哪里。
+
+> **<font color=orange>依赖注入的负面影响：</font>**它将应用程序中的组件与它们当前的组织方式耦合起来，使重构变得更加困难。
+
+### 6.2 程序化的事件侦听器
+
+除了`$emit`，Vue 实例在其事件借口中提供了其他方法：
+
+- 通过`$on(eventName, eventHandler)`侦听一个事件；
+- 通过`$once(eventName, eventHandler)`一次性侦听一个事件；
+- 通过`$off(eventName, eventHandler)`停止侦听一个 事件。
+
+可以用于在一个组件实例上手动侦听事件，也可用于代码组织工具。
+
+> **<font color=red>Notice：</font>**Vue 的事件系统不同于浏览器的 EventTarget API，`$emit`、`$on`、`$off`并不是`dispatchEvent`、`addEventListener`、`removeEventListener`的别名。
+
+### 6.3 循环引用
+
+**递归组件**
+
+组件可以在它自己的模板中调用自身，但只能通过`name`选项来做这件事。
+
+当使用`Vue.component`全局注册一个组件时，这个全局的 ID 会自动设置为该组件的`name`选项。
+
+稍有不慎，递归组件就可能导致无限循环：
+
+```javascript
+name: 'stack-overflow',
+template: '<div><stack-overflow></stack-overflow></div>'
+```
+
+**组件之间的循环引用**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
