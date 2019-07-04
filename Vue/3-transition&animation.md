@@ -24,14 +24,6 @@ Vue 提供了 `transition` 的封装组件，在下列情形中，可以给任�
 <transition name="fade">
 	<p v-if="show">When "show = true", I will show!</p>
 </transition>
-<style>
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
-}
-.fade-enter, .fade-leave-to {
-  opacity: 0;
-}
-</style>
 ```
 
 ```javascript
@@ -63,7 +55,252 @@ data: {
 
 ![过渡类名示意图](./img/v-enter-leave.png)
 
-对于这些在过渡中切换的类名来说，如果你使用一个没有名字的 `<transition>`，则 `v-` 是这些类名的默认前缀（如使用了 `<transition name="my-transition">`，那么 `v-enter` 会替换为 `my-transition-enter`）。
+对于这些在过渡中切换的类名来说，如果使用一个没有名字的 `<transition>`，则 `v-` 是这些类名的默认前缀，若使用了`name`（如 `<transition name="my-transition">`），那么`v-enter`会替换为`name值-enter`（如`my-transition-enter`）。
+
+#### 1.1.2 CSS 过渡
+
+通常的过渡是使用 CSS 过渡。
+
+```css
+.fade-enter-active { transition: all .5s ease; }
+.fade-leave-active {
+  transition: all .5s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.fade-enter, .fade-leave-to {
+  transform: translateX(10px);
+  opacity: 0;
+}
+```
+
+#### 1.1.3 CSS 动画
+
+CSS 动画用法同 CSS 过渡，区别是在动画中`v-enter`类名在节点插入 DOM 后不会立即删除，而是在`animationed`事件触发时删除。
+
+```css
+.bounce-enter-active { animation: bounce-in 1s; }
+.bounce-leave-active { animation: bounce-in 1s reverse; }
+@keyframes bounce-in {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+```
+
+#### 1.1.4 自定义过渡的类名
+
+可以通过以下特性来自定义过渡类名：
+
+- `enter-class`
+- `enter-active-class`
+- `enter-to-class`
+- `leave-class`
+- `leave-active-class`
+- `leave-to-class`
+
+他们的优先级高于普通的类名，用于结合 Vue 的过渡系统和其他第三方 CSS 动画库。
+
+```html
+<link href="https://cdn.jsdelivr.net/npm/animate.css@3.5.1" rel="stylesheet" type="text/css">
+
+<div id="example-3">
+  <button @click="show = !show">
+    Toggle render
+  </button>
+  <transition
+    name="custom-classes-transition"
+    enter-active-class="animated tada"
+    leave-active-class="animated bounceOutRight"
+  >
+    <p v-if="show">hello</p>
+  </transition>
+</div>
+```
+
+#### 1.1.5 同时使用过渡和动画
+
+Vue 为了知道过渡的完成，必须设置相应的事件监听器。它可以是 `transitionend` 或 `animationend` ，这取决于给元素应用的 CSS 规则。如果用其中一种，Vue 能自动识别类型并设置监听。但在一些场景中，需要给同一个元素同时设置两种过渡动效，`animation`很快的被触发并完成了，而 `transition`效果还没结束。在这种情况下，就需要使用 `type` 特性并设置 `animation` 或 `transition` 来明确声明要 Vue 监听的类型。
+
+#### 1.1.6 显性的过渡持续时间
+
+在很多情况下，Vue 可以自动得出过渡效果的完成时机。默认情况下，Vue 会等待其在过渡效果的根元素的第一个`transitionend`或`animationend`事件。
+
+也可以不这样设定（如，自定义一系列过渡效果，其中一些嵌套的内部元素相比于过渡效果的根元素有延迟的或更长的过渡效果），可以用 `<transition>` 组件上的 `duration` 属性定制一个显性的过渡持续时间 (以毫秒计)：
+
+```html
+<transition :duration="1000">...</transition>
+```
+
+也可以定制进入和移出的持续时间：
+
+```html
+<transition :duration="{ enter: 500, leave: 800 }">...</transition>
+```
+
+#### 1.1.7 JS 钩子
+
+可以在属性中声明 JS 钩子。
+
+```html
+<transition
+  v-on:before-enter="beforeEnter"
+  v-on:enter="enter"
+  v-on:after-enter="afterEnter"
+  v-on:enter-cancelled="enterCancelled"
+
+  v-on:before-leave="beforeLeave"
+  v-on:leave="leave"
+  v-on:after-leave="afterLeave"
+  v-on:leave-cancelled="leaveCancelled"
+>
+  <!-- ... -->
+</transition>
+```
+
+```javascript
+methods: {
+  /* -Enter- */
+  beforeEnter: function (el) { /* ... */ },
+  enter: function (el, done) {
+    // 与 CSS 结合使用时, 回调函数 done 是可选的
+    done()
+  },
+  afterEnter: function (el) { /* ... */ },
+  enterCancelled: function (el) { /* ... */ },
+	/* -Leave- */
+  beforeLeave: function (el) { /* ... */ },
+  leave: function (el, done) { /* ... */
+    done()
+  },
+  afterLeave: function (el) { /* ... */ },
+  // leaveCancelled 只用于 v-show 中
+  leaveCancelled: function (el) { /* ... */ }
+}
+```
+
+这些钩子函数可以结合 CSS `transitions/animations` 使用，也可以单独使用。
+
+> <font color=orange>Notice：</font>
+>
+> 当只用 JS 过渡时，在`enter`和`leave`中必须使用`done`进行回调。否则，它们将被同步调用，过渡会立即完成。
+>
+> 推荐对于仅使用 JavaScript 过渡的元素添加 `v-bind:css="false"`，Vue 会跳过 CSS 的检测。这也可以避免过渡过程中 CSS 的影响。
+
+### 1.2 初始渲染的过渡
+
+可以通过`appear`特性设置在节点在初始渲染的过渡。
+
+```html
+<transition appear></transition>
+```
+
+这里默认和进入/离开过渡一样，同样也可以自定义 CSS 类名。
+
+```html
+<transition
+  appear
+  appear-class="custom-appear-class"
+  appear-to-class="custom-appear-to-class" (2.1.8+)
+  appear-active-class="custom-appear-active-class"
+>
+  <!-- ... -->
+</transition>
+```
+
+自定义 JS 钩子：
+
+```html
+<transition
+  appear
+  v-on:before-appear="customBeforeAppearHook"
+  v-on:appear="customAppearHook"
+  v-on:after-appear="customAfterAppearHook"
+  v-on:appear-cancelled="customAppearCancelledHook"
+></transition>
+```
+
+### 1.3 多个元素的过渡
+
+最常见的多标签过渡是一个列表和描述这个列表为空消息的元素：
+
+```html
+<transition>
+  <table v-if="items.length > 0">
+  </table>
+  <p v-else>Sorry, no items found.</p>
+</transition>
+```
+
+> <font color=orange>Notice：</font>当有相同标签名的元素切换时，需要通过`key`特性设置唯一的值来标记以让 Vue 区分它们，否则 Vue 为了效率只会替换相同标签内部的内容。
+
+一些场景中，可以通过给同一个元素的`key`特性设置不同的状态代替`v-if`和`v-else`。
+
+```html
+<transition>
+  <button v-bind:key="isEditing">
+    {{ isEditing ? 'Save' : 'Edit' }}
+  </button>
+</transition>
+```
+
+
+
+
+
+
+
+
+
+在元素绝对定位在彼此之上的时候运行正常：
+
+off
+
+然后，我们加上 translate 让它们运动像滑动过渡：
+
+off
+
+同时生效的进入和离开的过渡不能满足所有要求，所以 Vue 提供了 **过渡模式**
+
+- `in-out`：新元素先进行过渡，完成之后当前元素过渡离开。
+- `out-in`：当前元素先进行过渡，完成之后新元素过渡进入。
+
+用 `out-in` 重写之前的开关按钮过渡：
+
+```
+<transition name="fade" mode="out-in">
+  <!-- ... the buttons ... -->
+</transition>
+```
+
+off
+
+只用添加一个简单的特性，就解决了之前的过渡问题而无需任何额外的代码。
+
+`in-out` 模式不是经常用到，但对于一些稍微不同的过渡效果还是有用的。
+将之前滑动淡出的例子结合：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
