@@ -242,41 +242,48 @@ methods: {
 </transition>
 ```
 
-
-
-
-
-
-
-
-
-在元素绝对定位在彼此之上的时候运行正常：
-
-off
-
-然后，我们加上 translate 让它们运动像滑动过渡：
-
-off
-
-同时生效的进入和离开的过渡不能满足所有要求，所以 Vue 提供了 **过渡模式**
+`transition`的同时生效的进入和离开的过渡不能满足所有要求，所以 Vue 提供了 **过渡模式**
 
 - `in-out`：新元素先进行过渡，完成之后当前元素过渡离开。
 - `out-in`：当前元素先进行过渡，完成之后新元素过渡进入。
 
-用 `out-in` 重写之前的开关按钮过渡：
-
-```
+```html
 <transition name="fade" mode="out-in">
   <!-- ... the buttons ... -->
 </transition>
 ```
 
-off
+### 1.4 多个组件的过渡
 
-只用添加一个简单的特性，就解决了之前的过渡问题而无需任何额外的代码。
+多个组件的过渡不需要使用`key`特性，需要使**动态组件**：
 
-`in-out` 模式不是经常用到，但对于一些稍微不同的过渡效果还是有用的。
-将之前滑动淡出的例子结合：
+```html
+<transition name="component-fade" mode="out-in">
+  <component v-bind:is="view"></component>
+</transition>
+```
+```javascript
+data: {
+  view: 'v-a'
+},
+components: {
+  'v-a': {
+    template: '<div>Component A</div>'
+  },
+  'v-b': {
+    template: '<div>Component B</div>'
+  }
+}
+```
+### 1.5 列表过渡
+
+使用`<transitionpgroup>`组件可以渲染整个列表，它的特点：
+
+- 不同于 `<transition>`，它会以一个真实元素呈现：默认为一个 `<span>`，可以通过 `tag`特性更换为其他元素。
+- 过渡模式不可用（`mode`特性），因为不相互切换特有的元素。
+- 内部元素需要提供唯一的 `key` 属性值。
+
+
 
 
 
