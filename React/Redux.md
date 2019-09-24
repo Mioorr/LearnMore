@@ -190,13 +190,12 @@ function todoApp(state = initialState, action) {
       return Object.assign({}, state, {
         visibilityFilter: action.filter
       })
-    default:
-      return state; // 这里暂不处理任何 action，仅返回传入的 state
+    default: return state; // 暂不处理任何 action，仅返回传入的 state
   }
 }
 ```
 
-> **不要修改 state：**
+> **不要直接修改 state：**
 >
 > 使用`Object.assign()`时，不能这样使用`Object.assign(state, actions...)`，因为这个方法会改变第一个参数的值，所以必须将第一个参数设置为空对象。
 >
@@ -221,6 +220,7 @@ todos: [ // 创建新数组, 新的 todos 相当于旧的 todos 在末尾加上�
 有时候，可以把数据更新的逻辑拆分到一个单独的函数里：
 
 ```js
+const { SHOW_ALL } = VisibilityFilters;
 function todos(state = [], action) { // state 现在变成了一个数组
   switch (action.type) {
     case ADD_TODO:
@@ -243,24 +243,110 @@ function todos(state = [], action) { // state 现在变成了一个数组
     default: return state;
   }
 }
-
-function todoApp(state = initialState, action) {
+function visibilityFilter(state = SHOW_ALL, action) {
   switch (action.type) {
     case SET_VISIBILITY_FILTER:
-      return Object.assign({}, state, {
-        visibilityFilter: action.filter
-      });
-    case ADD_TODO:
-      return Object.assign({}, state, {
-        // 把更新的 state 部分传给 todos
-        todos: todos(state.todos, action);
-      });
-    case TOGGLE_TODO:
-      return Object.assign({}, state, {
-        todos: todos(state.todos, action)
-      });
+      return action.filter;
     default: return state;
   }
 }
+function todoApp(state = {}, action) {
+  return {
+    visibilityFilter: visibilityFilter(state.visibilityFilter, action),
+    todos: todos(state.todos, action)
+  };
+}
 ```
+
+> 每个 Reducer 只负责管理全局 state 中它负责的一部分，每个 Reducer 的 state 参数都不同，分别对应它管理的那部分 state 数据。
+
+#### conbineReducers()
+
+Redux 提供了`combineReducers()`工具类来做上面`todoApp`做的事情。
+
+```javascript
+import { combineReducers } from 'redux';
+const todoApp = combineReducers({
+  visibilityFilter,
+  todos
+});
+export default todoApp;
+```
+
+也可以给它们设置不同的 key，或者调用不同的函数。
+
+```javascript
+const reducer = combineReducers({
+  a: doSomethingWithA,
+  b: processB,
+  c: c
+});
+// 等价于
+function reducer(state = {}, action) {
+  return {
+    a: doSomethingWithA(state.a, action),
+    b: processB(state.b, action),
+    c: c(state.c, action)
+  };
+}
+```
+
+`combineReducers()` 生成一个调用 reducer 的函数。每个 reducer 根据它们的 key 来筛选出 state 中的一部分数据并处理，然后这个生成的函数再将所有 reducer 的结果合并成一个大的对象。
+
+## 2.3 Store
+
+Redux 应用只有一个单一 store。
+
+Store 的职责：
+
+- 维持应用的 state；
+- 提供`getState()`方法获取 state；
+- 提供`dispatch(action)`方法更新 state；
+- 通过`subscribe(listener)`注册监听器；
+- 通过`subscribe(listener)`返回的函数注销监听器。
+
+```javascript
+import {createStore} from 'redux';
+// 创建Store
+let store = createStore(todoApp);
+// 每次更新state打印日志
+const unsubscribe = store.subscribe(() => console.log(store.getState()));
+// 更新state
+store.dispatch(addTodo('Learn about actions'));
+// 通过执行subscribe返回的函数停止监听state更新
+unsubscribe();
+```
+
+## 2.4 数据流
+
+Redux 架构设计的核心是**严格的单向数据流**。
+
+Redux 应用中数据的生命周期遵循下面 4 个步骤：
+
+1. 调用`store.dispatch(action)`。
+2. Redux store 调用传入的 reducer 函数。
+3. 把多个子 reducer 输出合并成一个单一的树。
+4. Redux store 保存了根 reducer 返回的完整的 state 树。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -4,9 +4,7 @@
 
 ## 更改 `input` 标签的样式
 
+更改 `<input type="radio" />`标签的样式只能通过
 
 
-
-
-<input type="radio">选项一</input>
 
