@@ -43,7 +43,7 @@
 
 
 
-# 1. wx.request(Object object)
+# 1. wx.request(Object)
 
 用法与AJAX类似。
 
@@ -77,7 +77,7 @@ requestTask.abort() // 取消请求任务
 - `RequestTask.onHeadersReceived(function callback)`：监听 HTTP Response Header 事件，比请求完成事件更早。
 - `RequestTask.offHeadersReceived(function callback)`：取消监听 HTTP Response Header 事件。
 
-# 2. wx.uploadFile(Object object)
+# 2. wx.uploadFile(Object)
 
 客户端发起一个 HTTPS POST 请求，`content-type = multipart/form-data`。
 
