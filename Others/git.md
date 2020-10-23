@@ -50,9 +50,16 @@ git push origin/CUDO-666
 
 
 
+## 忽略文件修改的配置
 
+1. 仅忽略个人本地文件的修改：
 
+   ```powershell
+   # 进入 .git/info/exclude 文件进行修改
+   
+   ```
 
+   
 
 
 
