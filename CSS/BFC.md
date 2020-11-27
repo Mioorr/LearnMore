@@ -29,11 +29,13 @@ Formatting context 是 W3C CSS2.1 规范中的一个概念。它是页面中的�
 - BFC 就是页面上的一个隔离的独立容器，容器里面的子元素不会影响到外面的元素，反之也如此。
 - 计算 BFC 的高度时，浮动元素也参与计算。
 
-## 如何创建 BFC
+## 触发 BFC
 
-满足以下某一点：
+只要元素满足以下某条件中的任一点，即可触发 BFC 特性：
 
-- float 的值不是 none。
+- body 根元素。
+
+- 浮动元素：float 的值不是 none。
 - position 的值不是 static 或者 relative。
 - display 的值是 inline-block、table-cell、flex、table-caption、inline-flex。
 - overflow 的值不是 visible。
@@ -42,7 +44,7 @@ Formatting context 是 W3C CSS2.1 规范中的一个概念。它是页面中的�
 
 1. 利用 BFC 避免 margin 重叠 。
 
-2. 自适应两栏布局。
+2. 阻止普通文本流元素被浮动元素覆盖。
    根据：
 
    - 每个盒子的 margin box 的左边，与包含块 border box 的左边相接触（对于从左往右的格式化，否则相反），即使存在浮动也是如此。
@@ -52,6 +54,7 @@ Formatting context 是 W3C CSS2.1 规范中的一个概念。它是页面中的�
    - BFC 的区域不会与 float box 重叠。
 
 3. 清除浮动。
+   浮动的元素会脱离普通文本流，如果触发容器的 BFC，那么容器将会包裹着浮动元素。
 
 ## 总结
 
