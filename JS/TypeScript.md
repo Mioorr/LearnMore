@@ -106,6 +106,21 @@ console.log(colorName); // => Green
 
 变量声明的关键字`var`、`let`、`const`，就如同 ES2015 那样使用，这里不赘述。
 
+### 解构
+
+利用解构设置值类型。
+
+**解构用于函数传参**：
+
+```typescript
+type C = {a: string, b?: number}; // b后的?表示它是缺省值
+function f({a, b}: C): void {
+  // ...
+}
+```
+
+ 
+
 
 
 
